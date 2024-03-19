@@ -1,6 +1,5 @@
 import {useForm, SubmitHandler} from "react-hook-form"
 import { useNavigate, Link } from "react-router-dom"
-import axios from "axios";
 import useAuthStore from "../hooks/store";
 import { RegisterFormData } from "../types/registerForm";
 
@@ -30,7 +29,7 @@ const Register = () => {
             <h2 className="text-center text-2xl font-bold">Register</h2>
            <form onSubmit={handleSubmit(onSubmit)}  className="p-4">
             <div className="flex flex-col gap-y-6">
-                <input className="p-4 border-2" {...register("email", {
+                <input type="email" className="p-4 border-2" {...register("email", {
                   required: "This field is required"
                 })} placeholder="Email" />
                 {errors.email && (
@@ -55,7 +54,7 @@ const Register = () => {
               } else if (watch("password") !== val) {
                 return "Your passwords do no match";
               }
-            }})}type="password" placeholder="Confirm Password" />
+            }})} type="password" placeholder="Confirm Password" />
                {errors.passwordConfirmation && (
           <span className="text-red-500">{errors.passwordConfirmation.message}</span>
         )}

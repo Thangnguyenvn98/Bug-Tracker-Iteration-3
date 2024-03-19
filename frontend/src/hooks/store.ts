@@ -27,9 +27,13 @@ const useAuthStore = create<useAuthStore>((set) => ({
           if (response.status === 200) {
             set({ isLoggedIn: true });
             // Handle post-registration logic (e.g., redirect to dashboard)
+          }else {
+            throw new Error('Registration failed');
           }
         } catch (error) {
+          
           console.error('Registration error:', error);
+          throw error
           // Handle registration error (e.g., show error message)
         }
       },

@@ -1,7 +1,9 @@
 import { useNavigate,Link } from "react-router-dom"
+import { useForm } from "react-hook-form"
 
 const SignIn = () => {
   const navigate = useNavigate()
+  const {register,handleSubmit,formState: {errors}} = useForm()
   return (
     <div className="p-4">
         <div className="p-10  flex justify-center ">
