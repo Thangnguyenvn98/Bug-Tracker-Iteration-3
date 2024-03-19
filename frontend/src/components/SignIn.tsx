@@ -1,4 +1,7 @@
+import { useNavigate,Link } from "react-router-dom"
+
 const SignIn = () => {
+  const navigate = useNavigate()
   return (
     <div className="p-4">
         <div className="p-10  flex justify-center ">
@@ -13,7 +16,7 @@ const SignIn = () => {
                     <button type="submit" className="p-4 bg-blue-500 rounded-md text-white text-lg" >Login</button>
                     <div className="flex items-center justify-center gap-x-4">
                         <h2>Don't have an account?</h2>
-                        <a href="">Sign Up</a>
+                        <Link to="/register">Sign Up</Link>
                     </div>
 
                 </div>

@@ -8,6 +8,11 @@ import jwt from "jsonwebtoken"
 import Token from './models/token.model';
 import crypto from "crypto"
 import sendEmail from "./utils/email/sendEmail";
+import cookieParser from "cookie-parser"
+import verifyToken from "./middleware/auth";
+import { createUserSchema, loginUserSchema } from "./schemas/user.schema";
+import { ZodError } from 'zod';
+
 
 
 
@@ -18,8 +23,13 @@ const PORT = process.env.PORT || 5050;
 const app = express()
 
 app.use(express.json())
+app.use(cookieParser());
+
 app.use(express.urlencoded( {extended: true}))
-app.use(cors())
+app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials:true
+}))
 
 
 app.get("/api/test", async (req: Request, res:Response) => {
@@ -28,14 +38,33 @@ app.get("/api/test", async (req: Request, res:Response) => {
 })
 
 app.post("/api/login", async (req:Request, res:Response) => {
+    const { body } = loginUserSchema.parse(req)
+    const {username,password} = body
+
+
     try {
-        let user=await User.findOne({username: req.body.username})
+        let user=await User.findOne({username})
         if (!user) {
             return res.status(400).json({message:"Username does not exists !"})
         }
-        return res.status(400)
+        const isMatch = await bcrypt.compare(password,user.password)
+        if(!isMatch){
+            return res.status(400).json({message: "Invalid password"})
+        }
+        const token = jwt.sign({userId: user.id}, process.env.JWT_SECRET_KEY as string, {expiresIn: "1d"})
+        res.cookie("auth_token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 86400000
+        })
+        return  res.status(200).json({ userId: user._id });
+
 
     }catch (e){
+        if (e instanceof ZodError) {
+            // This is a validation error, so we respond with 400 and the error details
+            return res.status(400).json({ errors: e.errors[0].message });
+        }
         console.log(e)
         res.status(500).send({message:"Something went wrong"})
     }
@@ -43,11 +72,14 @@ app.post("/api/login", async (req:Request, res:Response) => {
 
 app.post("/api/register", async(req:Request,res:Response) => {
     try {
-        let user=await User.findOne({username: req.body.username})
+        const { body } = createUserSchema.parse(req);
+        const { username, password, email } = body;
+
+        let user=await User.findOne({username})
         if (user) {
             return res.status(400).json({message:"Username already exists!"})
         }
-        user= new User(req.body)
+        user= new User({ username, password, email })
         await user.save()
 
         const token = jwt.sign({userId: user.id}, process.env.JWT_SECRET_KEY as string, {expiresIn: "1d"})
@@ -59,6 +91,10 @@ app.post("/api/register", async(req:Request,res:Response) => {
         return res.sendStatus(200)
     }
     catch(e){
+        if (e instanceof ZodError) {
+            // This is a validation error, so we respond with 400 and the error details
+            return res.status(400).json({ errors: e.errors[0].message });
+        }
         console.log(e)
         res.status(500).send({message:"Something went wrong"})
     }
@@ -74,7 +110,7 @@ app.post("/api/requestPasswordReset", async (req:Request,res:Response) => {
         if (token) await token.deleteOne()
         let resetToken = crypto.randomBytes(32).toString("hex")
         const hash = await bcrypt.hash(resetToken, 8)
-        token = await new Token({userId: user.id, token:hash,createdAt:Date.now()})
+        token = await new Token({userId: user.id, token:hash,createdAt:Date.now()}).save()
         const link = `http://localhost:3000/passwordReset?token=${resetToken}&id=${user.id}`
         sendEmail(user.email,"Password Reset Request",{name: user.username,link: link,},"./template/requestResetPassword.handlebars");
         return res.json(link);
@@ -111,6 +147,10 @@ app.post('/api/resetPassword', async (req:Request,res:Response) => {
     }catch (e) {
 
     }
+})
+
+app.get('/api/validate-token',verifyToken, (req:Request,res:Response) => {
+    res.status(200).send({userId:req.userId})
 })
 
 

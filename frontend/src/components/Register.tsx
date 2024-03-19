@@ -1,20 +1,68 @@
+import {useForm, SubmitHandler} from "react-hook-form"
+import { useNavigate, Link } from "react-router-dom"
+import axios from "axios";
+import useAuthStore from "../hooks/store";
+import { RegisterFormData } from "../types/registerForm";
+
+
 
 
 const Register = () => {
+  const { register: storeRegister } = useAuthStore();
+  const navigate = useNavigate()
+  const {register, watch,handleSubmit, formState: { errors }} = useForm<RegisterFormData>()
+  const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
+    try {
+      await storeRegister(data)
+      navigate('/')
+
+    }catch (e){
+      console.error('Registration failed:',e)
+    }
+  }
+
+
+
   return (
     <div className="p-4">
     <div className="p-10  flex justify-center ">
         <div className="p-4 bg-white w-[400px] rounded-lg border-2 border-black">
             <h2 className="text-center text-2xl font-bold">Register</h2>
-           <form action="" className="p-4">
+           <form onSubmit={handleSubmit(onSubmit)}  className="p-4">
             <div className="flex flex-col gap-y-6">
-                <input className="p-4 border-2" type="text" placeholder="UserName" />
-                <input className="p-4 border-2" type="password" placeholder="Password" />
-                <input className="p-4 border-2" type="password" placeholder="Confirm Password" />
+                <input className="p-4 border-2" {...register("email", {
+                  required: "This field is required"
+                })} placeholder="Email" />
+                {errors.email && (
+          <span className="text-red-500">{errors.email.message}</span>
+        )}
+                <input className="p-4 border-2" {...register("username",{ required: "This field is required" })} placeholder="UserName" />
+                {errors.username && (
+          <span className="text-red-500">{errors.username.message}</span>
+        )}
+                <input className="p-4 border-2" {...register("password",    {required: "This field is required",
+            minLength: {
+              value: 8,
+              message: "Password must be at least 8 characters",
+            }})}type="password" placeholder="Password" />
+            {errors.password && (
+          <span className="text-red-500">{errors.password.message}</span>
+        )}
+                <input className="p-4 border-2" {...register("passwordConfirmation",{
+            validate: (val) => {
+              if (!val) {
+                return "This field is required";
+              } else if (watch("password") !== val) {
+                return "Your passwords do no match";
+              }
+            }})}type="password" placeholder="Confirm Password" />
+               {errors.passwordConfirmation && (
+          <span className="text-red-500">{errors.passwordConfirmation.message}</span>
+        )}
                 <button type="submit" className="p-4 bg-blue-500 rounded-md text-white text-lg" >Register</button>
                 <div className="flex items-center justify-center gap-x-4">
                     <h2>Already have an account?</h2>
-                    <a href="">Sign in</a>
+                    <Link to="/sign-in">Sign in</Link>
                 </div>
 
             </div>
