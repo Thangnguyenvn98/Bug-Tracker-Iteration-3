@@ -17,13 +17,18 @@
   },
   "homepage": "https://github.com/Thangnguyenvn98/Bug-Tracker-Iteration-3#readme",
   "dependencies": {
+    "@types/handlebars": "^4.1.0",
+    "@types/nodemailer": "^6.4.14",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "express": "^4.18.3",
+    "handlebars": "^4.7.8",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.5.0",
     "mongoose": "^8.2.2",
+    "nodemailer": "^6.9.12",
     "zod": "^3.22.4"
   },
   "devDependencies": {
