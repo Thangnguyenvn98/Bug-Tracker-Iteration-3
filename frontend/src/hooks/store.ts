@@ -2,7 +2,8 @@ import axios from "axios";
 import {create} from 'zustand'
 import { RegisterFormData } from "../types/registerForm";
 import { SignInFormData } from "../types/signInForm";
-
+import { BugFormData } from "../types/bugForm";
+import { BugReport } from "../types/bugReport";
 
 
 interface useAuthStore {
@@ -13,6 +14,9 @@ interface useAuthStore {
     resetRequest: (email:string) => Promise<number>;
     resetPassword: (userId:string,token:string,password:string) => Promise<boolean>
     logout: () => Promise<boolean>;
+    reportBug: (data:BugFormData) => Promise<boolean>;
+    getReports: () => Promise<BugReport[]>;
+
 
 }
 
@@ -80,6 +84,7 @@ const useAuthStore = create<useAuthStore>((set) => ({
             const response = await axios.post(`${API_BASE_URL}/api/requestPasswordReset`,{email})
             return response.status
         }catch (error){
+            console.log(error)
             throw error
         }
     },
@@ -88,7 +93,9 @@ const useAuthStore = create<useAuthStore>((set) => ({
             const response = await axios.post(`${API_BASE_URL}/api/resetPassword`,{userId,token,password})
             return response.status === 200;
         }catch (error){
+            console.log(error)
             throw error
+            
         }
     },
     logout: async () => {
@@ -96,8 +103,29 @@ const useAuthStore = create<useAuthStore>((set) => ({
             const response = await axios.post(`${API_BASE_URL}/api/logout`, {}, {withCredentials:true})
             return response.status === 200
         }catch (error) {
+            console.log(error)
             throw error
         }
+    },
+    reportBug: async (data) => {
+      try {
+          const response = await axios.post(`${API_BASE_URL}/api/report-bug`,data, {withCredentials:true})
+          return response.status === 200
+      }catch (error) {
+          console.log(error)
+          throw error
+      }
+    },
+    getReports: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/reports`,{withCredentials:true})
+        return response.data
+      }catch (error) {
+        console.log(error)
+        throw error
+      }
     }
+  
+    
 }))
 export default useAuthStore;

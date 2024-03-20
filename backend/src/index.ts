@@ -12,6 +12,7 @@ import cookieParser from "cookie-parser"
 import verifyToken from "./middleware/auth";
 import { createUserSchema, loginUserSchema } from "./schemas/user.schema";
 import { ZodError } from 'zod';
+import Report from "./models/report.model";
 
 
 
@@ -178,6 +179,50 @@ app.post('/api/logout', (req:Request,res:Response) => {
     console.log("Testing from logout")
     res.send()
 })
+
+app.get('/api/reports', verifyToken, async (req:Request, res:Response) => {
+    const userId = req.userId; // Assuming verifyToken middleware adds userId to req
+    let user = await User.findById(userId);
+    if (!user) {
+        return res.status(400).json({message: "User unauthorized"});
+    }
+
+    const reports = await Report.find()
+                                .select('number type summary isClosed -_id');
+    console.log(reports)
+
+    res.status(200).json(reports);
+});
+
+app.post("/api/report-bug", verifyToken, async (req, res) => {
+    try {
+        const { number, type, summary, progress } = req.body;
+        const userId = req.userId; // Assuming verifyToken middleware adds userId to req
+        let user=await User.findById(userId);
+        if (!user) {
+            return res.status(400).json({message:"User unauthorized"})
+        }
+        const bugReport = await Report.findOne({number})
+        if (bugReport) {
+            return res.status(400).json({message:"Bug report number already exists!"})
+
+        }
+        const newBugReport = new Report({
+            number,
+            type,
+            summary,
+            progress,
+            createdBy: userId // Setting the creator of the bug report
+        });
+
+        await newBugReport.save();
+
+        return res.status(200).send({ message: "Bug reported successfully" });
+    } catch (e) {
+        console.error(e);
+        res.status(500).send({ message: "Something went wrong" });
+    }
+});
 
 
 app.listen(PORT, () => {
