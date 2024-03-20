@@ -2,27 +2,47 @@ import {useForm, SubmitHandler} from "react-hook-form"
 import { useNavigate, Link } from "react-router-dom"
 import useAuthStore from "../hooks/store";
 import { RegisterFormData } from "../types/registerForm";
-
-
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
+import { useEffect } from "react";
 
 
 const Register = () => {
-  const { register: storeRegister } = useAuthStore();
+  const { register: storeRegister, verifyToken, isLoggedIn } = useAuthStore();
   const navigate = useNavigate()
   const {register, watch,handleSubmit, formState: { errors }} = useForm<RegisterFormData>()
+  useEffect(() => {
+    
+      verifyToken();
+    
+     // Verify token on component mount
+  }, [verifyToken]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/');  // Redirect to home if already logged in
+    }
+  }, [isLoggedIn, navigate]);
+  
   const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     try {
       await storeRegister(data)
       navigate('/')
+      toast.success("Register Success")
 
     }catch (e){
+      const errorMessage = e instanceof AxiosError ? e.response?.data.message : 'Register failed';
+      toast.error(errorMessage)
       console.error('Registration failed:',e)
     }
   }
 
-
+  if (isLoggedIn){
+    return null;
+  }
 
   return (
+    
     <div className="p-4">
     <div className="p-10  flex justify-center ">
         <div className="p-4 bg-white w-[400px] rounded-lg border-2 border-black">

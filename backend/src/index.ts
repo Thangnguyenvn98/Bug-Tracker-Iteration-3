@@ -36,7 +36,24 @@ app.get("/api/test", async (req: Request, res:Response) => {
     res.json({message: "Hello Wordld !"})
 
 })
+app.get("/api/users/:userId/tokens/:tokenId", async (req:Request, res:Response) => {
+    const { userId, tokenId } = req.params;
 
+    try {
+        const user = await User.findById(userId)
+        if (!user){
+            return res.status(404).json({ message: "User not found" });
+        }
+        const token = await Token.findOne({userId: user.id,_id:tokenId})
+        if (!token) {
+            return res.status(404).json({ message: "Token not found" });
+        }
+        res.json(user.username)
+    }catch(error) {
+        res.status(500).send({message:"Something went wrong"})
+
+    }
+})
 app.post("/api/login", async (req:Request, res:Response) => {
     const { body } = loginUserSchema.parse(req)
     const {username,password} = body
@@ -55,7 +72,7 @@ app.post("/api/login", async (req:Request, res:Response) => {
         res.cookie("auth_token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            maxAge: 86400000
+            maxAge: 86400000,
         })
         return  res.status(200).json({ userId: user._id });
 
@@ -86,9 +103,9 @@ app.post("/api/register", async(req:Request,res:Response) => {
         res.cookie("auth_token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            maxAge: 86400000
-        })
-        return res.sendStatus(200)
+            maxAge: 86400000,
+          });
+        return res.status(200).send({ message: "User registered OK" })
     }
     catch(e){
         if (e instanceof ZodError) {
@@ -102,6 +119,7 @@ app.post("/api/register", async(req:Request,res:Response) => {
 
 app.post("/api/requestPasswordReset", async (req:Request,res:Response) => {
     try {
+        console.log(req.body.email)
         let user= await User.findOne({email:req.body.email})
         if (!user) {
             return res.status(400).json({message:"User does not exists!"})
@@ -111,7 +129,7 @@ app.post("/api/requestPasswordReset", async (req:Request,res:Response) => {
         let resetToken = crypto.randomBytes(32).toString("hex")
         const hash = await bcrypt.hash(resetToken, 8)
         token = await new Token({userId: user.id, token:hash,createdAt:Date.now()}).save()
-        const link = `http://localhost:3000/passwordReset?token=${resetToken}&id=${user.id}`
+        const link = `http://localhost:5173/reset-password?token=${resetToken}&id=${user.id}`
         sendEmail(user.email,"Password Reset Request",{name: user.username,link: link,},"./template/requestResetPassword.handlebars");
         return res.json(link);
     }catch (e) {
@@ -151,6 +169,13 @@ app.post('/api/resetPassword', async (req:Request,res:Response) => {
 
 app.get('/api/validate-token',verifyToken, (req:Request,res:Response) => {
     res.status(200).send({userId:req.userId})
+})
+
+app.post('/api/logout', (req:Request,res:Response) => {
+    res.cookie("auth_token", "",  {
+        expires: new Date(0)
+    })
+    res.send()
 })
 
 

@@ -10,9 +10,10 @@ declare global {
   }
 
 const verifyToken = (req: Request, res:Response, next: NextFunction) => {
-    const token = req.cookies["auth-token"]
+    const token = req.cookies["auth_token"]
+    console.log(token)
     if(!token) {
-        return res.status(401).json({message: "unauthorized"})
+        return res.status(401).json({message: "unauthorized token"})
     }
 
     try {
@@ -20,7 +21,7 @@ const verifyToken = (req: Request, res:Response, next: NextFunction) => {
         req.userId = (decoded as JwtPayload).userId
         next()
     }catch (e){
-        return res.status(401).json({message: "unauthorized"})
+        return res.status(401).json({message: "unauthorized token"})
     }
 
     

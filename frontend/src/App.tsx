@@ -11,6 +11,10 @@ import Layout from './layouts/Layout';
 import Home from './components/Home';
 import BugDetail from './components/BugDetail';
 import Register from './components/Register';
+import RequestReset from './components/RequestReset';
+import ResetPassword from './components/ResetPassword';
+
+
 
 function App() {
 
@@ -47,6 +51,22 @@ function App() {
             element={
               <Layout>
                 <SignIn />
+              </Layout>
+            }
+          />
+           <Route
+            path="/password-reset-request"
+            element={
+              <Layout>
+                <RequestReset />
+              </Layout>
+            }
+          />
+               <Route
+            path="/reset-password"
+            element={
+              <Layout>
+                <ResetPassword />
               </Layout>
             }
           />
