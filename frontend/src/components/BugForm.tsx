@@ -1,10 +1,10 @@
-import Navbar from "./Navbar"
+import Navbar from './Navbar'
 
-
-const BugDetail = () => {
+const BugForm = () => {
   return (
     <div className="p-4">
-      <div className="flex justify-around">
+      <h1 className="text-2xl font-bold text-center">Bug Report Form</h1>
+      <div className="flex justify-around mt-10">
         <div className="bg-blue-500 p-2">
           <form action="">
             <div className="flex flex-col gap-y-4">
@@ -42,4 +42,4 @@ const BugDetail = () => {
   )
 }
 
-export default BugDetail
+export default BugForm

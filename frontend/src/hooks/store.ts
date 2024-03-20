@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {create} from 'zustand'
 import { RegisterFormData } from "../types/registerForm";
 import { SignInFormData } from "../types/signInForm";
@@ -12,6 +12,8 @@ interface useAuthStore {
     login: (data: SignInFormData) => Promise<void>;
     resetRequest: (email:string) => Promise<number>;
     resetPassword: (userId:string,token:string,password:string) => Promise<boolean>
+    logout: () => Promise<boolean>;
+
 }
 
 
@@ -25,18 +27,20 @@ const useAuthStore = create<useAuthStore>((set) => ({
             const response = await axios.get(`${API_BASE_URL}/api/validate-token`, { withCredentials: true });
             set({ isLoggedIn: response.status === 200 });
         } catch (error) {
-            console.log(axios.isAxiosError(error))
-            console.log(error.response?.status === 401)
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
+           
+            if (axios.isAxiosError(error)) {
                 // 401 Unauthorized is an expected response indicating no current session
-                console.log("hello")
-                set({ isLoggedIn: false });
-            } else {
-                // Only log or handle errors that are not 401 Unauthorized
-                console.error('Unexpected error verifying token:', error);
-            }
+                
+                if (error.response?.status === 401) {
+                    // Silently handle the 401 error as an expected outcome
+                    set({ isLoggedIn: false });
+                } else {
+                    // Log or handle other errors as they are unexpected
+                    console.error('Unexpected error verifying token:', error);
+                
+      
         }
-    },
+    }}},
     register: async (data) => {
         try {
           const response = await axios.post(`${API_BASE_URL}/api/register`, data, {withCredentials:true});
@@ -84,6 +88,14 @@ const useAuthStore = create<useAuthStore>((set) => ({
             const response = await axios.post(`${API_BASE_URL}/api/resetPassword`,{userId,token,password})
             return response.status === 200;
         }catch (error){
+            throw error
+        }
+    },
+    logout: async () => {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/api/logout`, {}, {withCredentials:true})
+            return response.status === 200
+        }catch (error) {
             throw error
         }
     }

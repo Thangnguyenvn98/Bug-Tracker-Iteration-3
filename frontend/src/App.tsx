@@ -1,10 +1,9 @@
-import { useState } from 'react'
+
 import SignIn from './components/SignIn'
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  NavLink,
   Navigate,
 } from "react-router-dom";
 import Layout from './layouts/Layout';
@@ -13,6 +12,7 @@ import BugDetail from './components/BugDetail';
 import Register from './components/Register';
 import RequestReset from './components/RequestReset';
 import ResetPassword from './components/ResetPassword';
+import BugForm from './components/BugForm';
 
 
 
@@ -38,6 +38,14 @@ function App() {
               </Layout>
             }
           />
+          <Route
+              path="/add-bug"
+              element={
+                <Layout>
+                  <BugForm />
+                </Layout>
+              }
+            />
           <Route
             path="/register"
             element={

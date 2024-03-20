@@ -10,7 +10,7 @@ const SignIn = () => {
   const { login: storeLogin,verifyToken,isLoggedIn } = useAuthStore();
 
   const navigate = useNavigate()
-  console.log(isLoggedIn)
+  
   const {register,handleSubmit,formState: {errors}} = useForm<SignInFormData>()
   useEffect(() => {
     verifyToken();  // Verify token on component mount
@@ -24,7 +24,7 @@ const SignIn = () => {
   const onSubmit: SubmitHandler<SignInFormData> = async (data) => {
     try {
       await storeLogin(data)
-      console.log(isLoggedIn)
+      
     }catch (e){
       const errorMessage = e instanceof AxiosError ? e.response?.data.message : 'Login failed';
       toast.error(errorMessage);

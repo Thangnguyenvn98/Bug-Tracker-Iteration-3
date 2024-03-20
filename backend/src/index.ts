@@ -175,6 +175,7 @@ app.post('/api/logout', (req:Request,res:Response) => {
     res.cookie("auth_token", "",  {
         expires: new Date(0)
     })
+    console.log("Testing from logout")
     res.send()
 })
 
