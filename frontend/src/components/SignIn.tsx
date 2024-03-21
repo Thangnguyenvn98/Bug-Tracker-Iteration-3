@@ -39,7 +39,7 @@ const SignIn = () => {
                 <h2 className="text-center text-2xl font-bold">Login</h2>
                <form onSubmit={handleSubmit(onSubmit)} className="p-4">
                 <div className="flex flex-col gap-y-6">
-                <input className="p-4 border-2" {...register("username",{ required: "This field is required" })} placeholder="UserName" />
+                <input className="p-4 border-2" {...register("username",{ required: "This field is required" })} placeholder="Username" />
                 {errors.username && (
           <span className="text-red-500">{errors.username.message}</span>
         )}
