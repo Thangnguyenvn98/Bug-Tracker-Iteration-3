@@ -158,7 +158,7 @@ app.post("/api/requestPasswordReset", async (req:Request,res:Response) => {
                         ? 'https://bug-tracker-app-iteration-3.onrender.com'  // Replace with your actual production domain
                         : 'http://localhost:5173';
 
-        const link = `${baseUrl}/reset-password?token=${resetToken}&id=${user.id}`;
+        const link = `${baseUrl}/password-reset?token=${resetToken}&id=${user.id}`;
         sendEmail(user.email,"Password Reset Request",{name: user.username,link: link,},"./template/requestResetPassword.handlebars");
         return res.json(link);
     }catch (e) {
