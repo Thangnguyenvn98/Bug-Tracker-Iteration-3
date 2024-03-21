@@ -55,7 +55,7 @@ const Register = () => {
                 {errors.email && (
           <span className="text-red-500">{errors.email.message}</span>
         )}
-                <input className="p-4 border-2" {...register("username",{ required: "This field is required" })} placeholder="UserName" />
+                <input className="p-4 border-2" {...register("username",{ required: "This field is required" })} placeholder="Username" />
                 {errors.username && (
           <span className="text-red-500">{errors.username.message}</span>
         )}
