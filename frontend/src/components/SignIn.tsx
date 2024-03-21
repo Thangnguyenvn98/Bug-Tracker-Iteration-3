@@ -24,6 +24,7 @@ const SignIn = () => {
   const onSubmit: SubmitHandler<SignInFormData> = async (data) => {
     try {
       await storeLogin(data)
+      toast.success("Log in successful")
       
     }catch (e){
       const errorMessage = e instanceof AxiosError ? e.response?.data.message : 'Login failed';
