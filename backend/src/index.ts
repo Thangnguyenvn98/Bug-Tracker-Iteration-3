@@ -34,7 +34,9 @@ app.use(cors({
 }))
 
 app.use(express.static(path.join(__dirname, "../../frontend/dist")))
-
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/dist', 'index.html'));
+  });
 
 app.get("/api/test", async (req: Request, res:Response) => {
     res.json({message: "Hello Wordld !"})
