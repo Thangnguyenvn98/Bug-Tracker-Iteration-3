@@ -118,6 +118,28 @@ app.post("/api/register", async(req:Request,res:Response) => {
     }
 })
 
+app.post('/api/changePassword',verifyToken, async (req:Request,res:Response) => {
+    const user = await User.findById(req.userId);
+    if (!user) {
+        return res.status(400).json({message:"User does not exists!"})
+    }
+    const {password,newPassword,newPasswordConfirmation} = req.body
+    
+    const isMatch = await bcrypt.compare(password,user.password)
+    if(!isMatch){
+        return res.status(400).json({message: "Old password not match"})
+    }
+    if (newPassword !== newPasswordConfirmation) {
+        return res.status(400).json({ message: "New password and confirmation do not match" });
+    }
+    user.password = newPassword
+    await user.save()
+    sendEmail(user.email,"Password Reset Successfully", {name: user.username},"./template/resetPassword.handlebars")
+
+    res.json({ message: "Password changed successfully" });
+
+})
+
 app.post("/api/requestPasswordReset", async (req:Request,res:Response) => {
     try {
         console.log(req.body.email)
@@ -172,6 +194,34 @@ app.get('/api/validate-token',verifyToken, (req:Request,res:Response) => {
     res.status(200).send({userId:req.userId})
 })
 
+app.get('/api/user',verifyToken, async (req:Request,res:Response) => {
+    try {
+        const user = await User.findById(req.userId).select('username email');
+        if (!user) {
+            return res.status(400).json({ message: "User not exists!" });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while fetching the user." });
+    }
+})
+
+app.get('/api/user/:id',async (req:Request,res:Response) => {
+    try {
+        const {id} = req.params
+        
+        const user = await User.findById(id).select('username email');
+        if (!user) {
+            return res.status(400).json({ message: "User not exists!" });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while fetching the user." });
+    }
+})
+
 app.post('/api/logout', (req:Request,res:Response) => {
     res.cookie("auth_token", "",  {
         expires: new Date(0)
@@ -191,6 +241,21 @@ app.get('/api/reports', verifyToken, async (req:Request, res:Response) => {
                                 .select('number type summary isClosed -_id') 
                                 .sort({ createdAt: -1 });;
     
+
+    res.status(200).json(reports);
+});
+
+app.get('/api/user/:id/reports', async (req:Request, res:Response) => {
+    const {id} = req.params
+    let user = await User.findById(id);
+    if (!user) {
+        return res.status(400).json({message: "User unauthorized"});
+    }
+
+    // Find reports where the createdBy field matches the user's ID
+    const reports = await Report.find({ createdBy: id })
+                                .select('number type summary isClosed -_id') 
+                                .sort({ createdAt: -1 });
 
     res.status(200).json(reports);
 });
@@ -252,37 +317,34 @@ app.patch('/api/bug/:id',verifyToken,async(req:Request,res:Response) => {
     if (!bugReport){
         return res.status(400).json({message:"Bug report number does not exists!"})
     } 
-    if (type) bugReport.type = type;
-    if (summary) bugReport.summary = summary;
+    bugReport.type = type || bugReport.type;
+    bugReport.summary = summary || bugReport.summary;
 
-    if (typeof isClosed === 'boolean') bugReport.isClosed = isClosed;
-    
-    if (isClosed && reasonForClosing?.trim() === ''){
-        
-        return res.status(400).json({message:"Need a reason to close the bug"})
-    }
-    if (!isClosed) {
-        bugReport.reasonForClosing = ''
-    }else {
-        if (reasonForClosing) bugReport.reasonForClosing = reasonForClosing;
-
-    }
-    if (typeof isFixed === 'boolean') bugReport.isFixed = isFixed;
-    if (isFixed && bugFixDetails?.trim() === ''){
-        
-        return res.status(400).json({message:"Need a bug fix details to fixed the bug"})
-    }
-    if (!isFixed){
-        bugReport.bugFixDetails = '' 
-    }else {
-        if (!isClosed) {
-            bugReport.bugFixDetails = ''
-            bugReport.isFixed= false
-        }else {
-            if (bugFixDetails) bugReport.bugFixDetails = bugFixDetails;
-
+    // Handle closing of the bug
+    if (isClosed) {
+        if (!reasonForClosing?.trim()) {
+            return res.status(400).json({ message: "Need a reason to close the bug" });
         }
+        bugReport.isClosed = true;
+        bugReport.reasonForClosing = reasonForClosing;
+
+        if (isFixed) {
+            if (!bugFixDetails?.trim()) {
+                return res.status(400).json({ message: "Need bug fix details to mark the bug as fixed" });
+            }
+            bugReport.isFixed = true;
+            bugReport.bugFixDetails = bugFixDetails;
+        } else {
+            bugReport.isFixed = false;
+            bugReport.bugFixDetails = '';
+        }
+    } else {
+        bugReport.isClosed = false;
+        bugReport.reasonForClosing = '';
+        bugReport.isFixed = false;
+        bugReport.bugFixDetails = '';
     }
+
     if (bugReport.createdBy.toString() !== userId && !bugReport.progressUpdates.includes(userId)) {
         bugReport.progressUpdates.push(userId);
     }

@@ -7,6 +7,7 @@ import useAuthStore from '../hooks/store'
 import { AxiosError } from 'axios'
 import { useEffect, useState } from 'react'
 import Loader from './Loading'
+import { User } from '../types/user'
 
 
 
@@ -15,11 +16,11 @@ const BugDetail = () => {
   const { id } = useParams();
 
   const [bugInfo, setBugInfo] = useState<BugFormDetail>()
+  const [user,setUser] = useState<User>()
 
 
 
-
-  const { getSpecificBug, modifiedBug} = useAuthStore();
+  const { getSpecificBug, modifiedBug, getUserById} = useAuthStore();
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<BugFormDetail>();
 
   useEffect(() => {
@@ -27,7 +28,9 @@ const BugDetail = () => {
       if (id) {
         try {
           const fetchedBugDetails = await getSpecificBug(id);
+          const creator = await getUserById(fetchedBugDetails.createdBy)
           setBugInfo(fetchedBugDetails);
+          setUser(creator)
           reset(fetchedBugDetails); // Reset the form with fetched data
 
         } catch (error) {
@@ -82,6 +85,23 @@ const BugDetail = () => {
                     
                      
                             </div>
+                            { user && ( 
+                            <>
+                            <div className="flex gap-x-[5.2rem]">
+                                <label>Author:</label>
+                                <label>{user.username}</label>
+                    
+                     
+                            </div>
+                            <div className="flex gap-x-[5.9rem]">
+                                <label>Email:</label>
+                                <label>{user.email}</label>
+                
+                 
+                            </div>
+                            </>
+                            )}
+                         
                             <div className="flex gap-x-[3.1rem]">
                                 <label>Type of Bug:</label>
                                 <input {...register('type', { required: true })} type="text" className="border-2 border-slate-400 text-black"  />

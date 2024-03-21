@@ -2,17 +2,18 @@ import { useNavigate, Link } from "react-router-dom"
 import useAuthStore from "../hooks/store"
 import { useEffect, useState } from "react";
 import { BugReport } from "../types/bugReport";
+
 import Navbar from "./Navbar";
+import toast from "react-hot-toast";
 import Loader from "./Loading";
 
 
-const Home = () => {
-  const { isLoggedIn, getUserReports, verifyToken, getUser } = useAuthStore();
+const BugLibrary = () => {
+  const { isLoggedIn, getReports, verifyToken } = useAuthStore();
   const navigate = useNavigate();
   const [reports, setReports] = useState<BugReport[]>([]);
-  const [userName, setUserName] = useState('');
-  const [email, setEmail] = useState('');
-
+  const [reportNumber, setReportNumber] = useState('')
+  
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -21,14 +22,8 @@ const Home = () => {
         navigate('/sign-in');
       }else {
         try {
-          
-          const response = await getUser()
-          if (response) {
-            setUserName(response.username);
-            setEmail(response.email)
-            const fetchedReports = await getUserReports(response._id);
-            setReports(fetchedReports);
-        }
+          const fetchedReports = await getReports();
+          setReports(fetchedReports);
         } catch (error) {
           console.error("Failed to fetch reports:", error);
         }
@@ -36,9 +31,22 @@ const Home = () => {
     };
 
     checkAuth();
-  }, [isLoggedIn, verifyToken, navigate,getUserReports,userName]);
+  }, [isLoggedIn, verifyToken, navigate,getReports]);
 
- 
+  const handleReportNumberSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const reportExists = reports.find(report => report.number.toString() === reportNumber);
+    if(reportExists) {
+      navigate(`/bug/${reportNumber}`)
+    } else {
+      if (isNaN(Number(reportNumber))){
+        toast.error("Please enter a number")
+      }else {
+        toast.error("Report number does not exists")
+      }
+    }
+
+  }
   if (!reports){
     return <Loader/>
   }
@@ -46,11 +54,19 @@ const Home = () => {
   return (
     <div className="p-4">
      <Navbar/>
-      <h1 className="text-right mt-4">{email}</h1>
-      <h1 className="text-2xl font-bold text-center mb-5 mt-6">{userName.length > 0 ? `Welcome back, ${userName} !`: ''}</h1>
-      <p className="text-center">Below is the bug report created by you</p>
+      <h1 className="text-2xl font-bold text-center mb-5 mt-6">Bug Reports Library</h1>
+      <form onSubmit={handleReportNumberSubmit} className="mb-4 flex justify-center gap-x-2">
+        <input
+          type="text"
+          value={reportNumber}
+          onChange={(e) => setReportNumber(e.target.value)}
+          placeholder="Enter report number to modify"
+          className="border-2 border-slate-400 p-2 w-[400px]"
+        />
+        <button type="submit" className="bg-blue-500 text-white p-2 rounded-md">Go to Report</button>
+      </form>
 
-      <table className="mt-8 min-w-full divide-y divide-gray-200 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+      <table className="min-w-full divide-y divide-gray-200 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
         <thead className="bg-blue-500 text-white">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Report Number</th>
@@ -79,4 +95,4 @@ const Home = () => {
   );
 }
 
-export default Home
+export default BugLibrary

@@ -9,15 +9,34 @@ const Navbar = () => {
     <nav className="p-2 border-2 border-black">
         <ul className="flex justify-center gap-x-10 text-2xl font-bold">
         {pathname === '/' && (
-                    <Link to="/add-bug" className="text-blue-500">Submit a bug</Link>
+                  <>
+                     <Link to="/buglibrary" className="text-blue-500">Bug Library</Link>
+
+                    <Link to="/add-bug" className="text-slate-400">Submit a  bug</Link>
+                    </>
                 )}  
-        {pathname !== '/' && (
-                    <Link to="/" className="text-blue-500">Bug Library</Link>
-                )}
-        {pathname !== '/' && pathname !== '/add-bug' && (
-                    <Link to="/add-bug" className="text-slate-400">Submit a new bug</Link>
-                )}             
-        <Link to='/password-reset-request'>Change password</Link>
+     
+        {pathname !== '/' && pathname !== '/add-bug' && pathname !== '/buglibrary' && (
+          <>
+                              <Link to="/" className="text-green-500">Home</Link>
+                              <Link to="/buglibrary" className="text-blue-500">Bug Library</Link>
+
+                    <Link to="/add-bug" className="text-slate-400">Submit a bug</Link>
+                    </>)}
+                    {pathname === '/add-bug' && (
+          <>
+                              <Link to="/" className="text-green-500">Home</Link>
+                              <Link to="/buglibrary" className="text-blue-500">Bug Library</Link>
+
+                    </>)}
+                    {pathname === '/buglibrary' && (
+          <>
+                              <Link to="/" className="text-green-500">Home</Link>
+
+                    <Link to="/add-bug" className="text-slate-400">Submit a bug</Link>
+                    </>)}
+                                                
+        <Link to='/change-password'>Change password</Link>
           <li><SignOutButton/></li>
         </ul>
     </nav>

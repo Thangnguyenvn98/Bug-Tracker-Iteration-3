@@ -5,7 +5,8 @@ import { SignInFormData } from "../types/signInForm";
 import { BugFormData } from "../types/bugForm";
 import { BugReport } from "../types/bugReport";
 import { BugFormDetail } from "../types/bugFormDetail";
-
+import { User } from "../types/user";
+import { ChangePasswordProps } from "../types/changePassword";
 
 interface useAuthStore {
     isLoggedIn: boolean;
@@ -17,9 +18,12 @@ interface useAuthStore {
     logout: () => Promise<boolean>;
     reportBug: (data:BugFormData) => Promise<boolean>;
     getReports: () => Promise<BugReport[]>;
+    getUserReports: (id:string) => Promise<BugReport[]>
     getSpecificBug: (id:string) => Promise<BugFormDetail>;
-    modifiedBug: (id:string,data:BugFormDetail) => Promise<boolean>
-
+    modifiedBug: (id:string,data:BugFormDetail) => Promise<boolean>;
+    getUser: () => Promise<User>;
+    passwordChange: (data:ChangePasswordProps) => Promise<boolean>
+    getUserById: (id:string) => Promise<User>
 
 }
 
@@ -145,6 +149,43 @@ const useAuthStore = create<useAuthStore>((set) => ({
         console.log(error)
         throw error
       }
+    },
+    getUser: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/user`,{withCredentials:true})
+        return response.data
+      }catch (error) {
+        console.log(error)
+        throw error
+      }
+    },
+    getUserById: async (id) => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/user/${id}`)
+        return response.data
+      }catch (error) {
+        console.log(error)
+        throw error
+      }
+    },
+    getUserReports: async (id) => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/user/${id}/reports`)
+        return response.data
+      }catch (error) {
+        console.log(error)
+        throw error
+      }
+    },
+    passwordChange: async (data) => {
+      try {
+        
+        const response = await axios.post(`${API_BASE_URL}/api/changePassword`,data,{withCredentials:true})
+        return response.data
+      }catch (error) {
+        console.log(error)
+        throw error
+    }
     }
   
     

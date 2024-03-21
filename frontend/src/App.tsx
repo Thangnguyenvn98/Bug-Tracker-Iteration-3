@@ -13,6 +13,8 @@ import Register from './components/Register';
 import RequestReset from './components/RequestReset';
 import ResetPassword from './components/ResetPassword';
 import BugForm from './components/BugForm';
+import ChangePassword from './components/ChangePassword';
+import BugLibrary from './components/BugLibrary';
 
 
 
@@ -27,6 +29,14 @@ function App() {
             element={
               <Layout>
                 <Home />
+              </Layout>
+            }
+          />
+          <Route
+            path="/buglibrary"
+            element={
+              <Layout>
+                <BugLibrary/>
               </Layout>
             }
           />
@@ -75,6 +85,14 @@ function App() {
             element={
               <Layout>
                 <ResetPassword />
+              </Layout>
+            }
+          />
+           <Route
+            path="/change-password"
+            element={
+              <Layout>
+                <ChangePassword/>
               </Layout>
             }
           />
