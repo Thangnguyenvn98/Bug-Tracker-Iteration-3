@@ -9,9 +9,10 @@ import path from "path";
 const sendEmail = async (email:string | undefined, subject:string, payload:any, template:string): Promise<void> => {
     console.log(process.env.USER_EMAIL)
     const transporter = nodemailer.createTransport({
-        host: "smtppro.zoho.com",
-        secure: true,
-        port: 465,
+        service:'Zoho',
+        host: "smtp.zoho.com",
+        port: 587,
+        secure: false,
         auth: {
             user: process.env.USER_EMAIL,
             pass: process.env.USER_PASSWORD
