@@ -13,6 +13,7 @@ import verifyToken from "./middleware/auth";
 import { createUserSchema, loginUserSchema } from "./schemas/user.schema";
 import { ZodError } from 'zod';
 import Report from "./models/report.model";
+import path from "path"
 
 
 
@@ -31,6 +32,8 @@ app.use(cors({
     origin: process.env.FRONTEND_URL,
     credentials:true
 }))
+
+app.use(express.static(path.join(__dirname, "../../frontend/dist")))
 
 
 app.get("/api/test", async (req: Request, res:Response) => {
@@ -142,7 +145,6 @@ app.post('/api/changePassword',verifyToken, async (req:Request,res:Response) => 
 
 app.post("/api/requestPasswordReset", async (req:Request,res:Response) => {
     try {
-        console.log(req.body.email)
         let user= await User.findOne({email:req.body.email})
         if (!user) {
             return res.status(400).json({message:"User does not exists!"})
@@ -226,7 +228,6 @@ app.post('/api/logout', (req:Request,res:Response) => {
     res.cookie("auth_token", "",  {
         expires: new Date(0)
     })
-    console.log("Testing from logout")
     res.send()
 })
 
@@ -269,7 +270,6 @@ app.post("/api/report-bug", verifyToken, async (req, res) => {
             return res.status(400).json({message:"User unauthorized"})
         }
         const bugReport = await Report.findOne({number})
-        console.log(progress)
         if (bugReport) {
             return res.status(400).json({message:"Bug report number already exists!"})
 
@@ -351,7 +351,7 @@ app.patch('/api/bug/:id',verifyToken,async(req:Request,res:Response) => {
     await bugReport.save();
     
 
-    let template;
+    let template:string;
     if (isClosed && isFixed) {
     template = 'closedAndFixedNotification.handlebars';
     } else if (isClosed && !isFixed) {
