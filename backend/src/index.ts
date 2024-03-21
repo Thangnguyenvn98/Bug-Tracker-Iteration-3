@@ -188,8 +188,9 @@ app.get('/api/reports', verifyToken, async (req:Request, res:Response) => {
     }
 
     const reports = await Report.find()
-                                .select('number type summary isClosed -_id');
-    console.log(reports)
+                                .select('number type summary isClosed -_id') 
+                                .sort({ createdAt: -1 });;
+    
 
     res.status(200).json(reports);
 });
@@ -203,16 +204,20 @@ app.post("/api/report-bug", verifyToken, async (req, res) => {
             return res.status(400).json({message:"User unauthorized"})
         }
         const bugReport = await Report.findOne({number})
+        console.log(progress)
         if (bugReport) {
             return res.status(400).json({message:"Bug report number already exists!"})
 
         }
+        const progressUpdates = progress ? [userId] : []; // Add the userId to progressUpdates if progress is true
+
         const newBugReport = new Report({
             number,
             type,
             summary,
-            progress,
-            createdBy: userId // Setting the creator of the bug report
+            createdBy: userId,
+            progressUpdates, // Set the progressUpdates array here
+            isClosed: false, // Initially, the bug is not closed
         });
 
         await newBugReport.save();
@@ -223,6 +228,95 @@ app.post("/api/report-bug", verifyToken, async (req, res) => {
         res.status(500).send({ message: "Something went wrong" });
     }
 });
+
+app.get('/api/bug/:id',verifyToken,async(req:Request,res:Response) => {
+    const { id } = req.params;
+    const bugReport = await Report.findOne({number:id})
+    const userId = req.userId;
+   
+    if (!bugReport){
+        return res.status(400).json({message:"Bug report number does not exists!"})
+    }
+  
+    res.status(200).json(bugReport);
+})
+
+app.patch('/api/bug/:id',verifyToken,async(req:Request,res:Response) => {
+    const { id } = req.params;
+    const { type, summary, isClosed, reasonForClosing, isFixed, bugFixDetails } = req.body;
+    const userId = req.userId;
+    
+    const bugReport = await Report.findOne({number:id})
+    const previousType = bugReport?.type
+    const previousSummary = bugReport?.summary
+    if (!bugReport){
+        return res.status(400).json({message:"Bug report number does not exists!"})
+    } 
+    if (type) bugReport.type = type;
+    if (summary) bugReport.summary = summary;
+
+    if (typeof isClosed === 'boolean') bugReport.isClosed = isClosed;
+    
+    if (isClosed && reasonForClosing?.trim() === ''){
+        
+        return res.status(400).json({message:"Need a reason to close the bug"})
+    }
+    if (!isClosed) {
+        bugReport.reasonForClosing = ''
+    }else {
+        if (reasonForClosing) bugReport.reasonForClosing = reasonForClosing;
+
+    }
+    if (typeof isFixed === 'boolean') bugReport.isFixed = isFixed;
+    if (isFixed && bugFixDetails?.trim() === ''){
+        
+        return res.status(400).json({message:"Need a bug fix details to fixed the bug"})
+    }
+    if (!isFixed){
+        bugReport.bugFixDetails = '' 
+    }else {
+        if (!isClosed) {
+            bugReport.bugFixDetails = ''
+            bugReport.isFixed= false
+        }else {
+            if (bugFixDetails) bugReport.bugFixDetails = bugFixDetails;
+
+        }
+    }
+    if (bugReport.createdBy.toString() !== userId && !bugReport.progressUpdates.includes(userId)) {
+        bugReport.progressUpdates.push(userId);
+    }
+    await bugReport.save();
+    
+
+    let template;
+    if (isClosed && isFixed) {
+    template = 'closedAndFixedNotification.handlebars';
+    } else if (isClosed && !isFixed) {
+    template = 'closedButNotFixedNotification.handlebars';
+    } else {
+    template = 'updateNotification.handlebars';
+    }
+    const userIDsToUpdate = bugReport.progressUpdates.concat([bugReport.createdBy]);
+    const usersToUpdate = await User.find({
+        '_id': { $in: userIDsToUpdate }
+            });
+    usersToUpdate.forEach(user => {
+                const emailData = {
+                name: user.username,
+                reportNumber: bugReport.number,
+                status: bugReport.isClosed ? 'Closed' : 'Open',
+                type: bugReport.type,
+                summary: bugReport.summary,
+                reasonForClosing: bugReport.reasonForClosing,
+                bugFixDetails: bugReport.bugFixDetails,
+                previousSummary,
+                previousType
+                    };
+                    sendEmail(user.email, "Bug Report Update", emailData, `./template/${template}`);
+                })
+    res.json(true)
+})
 
 
 app.listen(PORT, () => {

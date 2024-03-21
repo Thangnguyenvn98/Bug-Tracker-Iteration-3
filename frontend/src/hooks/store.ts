@@ -4,6 +4,7 @@ import { RegisterFormData } from "../types/registerForm";
 import { SignInFormData } from "../types/signInForm";
 import { BugFormData } from "../types/bugForm";
 import { BugReport } from "../types/bugReport";
+import { BugFormDetail } from "../types/bugFormDetail";
 
 
 interface useAuthStore {
@@ -16,6 +17,8 @@ interface useAuthStore {
     logout: () => Promise<boolean>;
     reportBug: (data:BugFormData) => Promise<boolean>;
     getReports: () => Promise<BugReport[]>;
+    getSpecificBug: (id:string) => Promise<BugFormDetail>;
+    modifiedBug: (id:string,data:BugFormDetail) => Promise<boolean>
 
 
 }
@@ -120,6 +123,24 @@ const useAuthStore = create<useAuthStore>((set) => ({
       try {
         const response = await axios.get(`${API_BASE_URL}/api/reports`,{withCredentials:true})
         return response.data
+      }catch (error) {
+        console.log(error)
+        throw error
+      }
+    },
+    getSpecificBug: async (id) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/bug/${id}`,{withCredentials:true})
+            return response.data
+        }catch (error) {
+            console.log(error)
+            throw error
+        }
+    },
+    modifiedBug: async (id,data) => {
+      try {
+        const response = await axios.patch(`${API_BASE_URL}/api/bug/${id}`,data,{withCredentials:true})
+        return response.status === 200
       }catch (error) {
         console.log(error)
         throw error

@@ -9,6 +9,8 @@ import { AxiosError } from 'axios'
 const BugForm = () => {
   const {register ,handleSubmit, formState: { errors }} = useForm<BugFormData>()
   const navigate = useNavigate()
+
+
   const { reportBug: storeReportBug } = useAuthStore();
 
   const onSubmit: SubmitHandler<BugFormData> = async (data) => {
@@ -24,24 +26,27 @@ const BugForm = () => {
 };
   return (
     <div className="p-4">
-            <h1 className="text-2xl font-bold text-center">Bug Report Form</h1>
+             
+                    <Navbar/>
+               
+            <h1 className="text-2xl font-bold text-center mb-5 mt-6">Bug Report Form</h1>
             <div className="flex justify-center gap-x-10 mt-10">
-                <div className="bg-blue-500 p-4">
+                <div className="bg-black p-4 rounded-md">
                     <form onSubmit={handleSubmit(onSubmit)}>
-                        <div className="flex flex-col gap-y-4">
+                        <div className="flex flex-col gap-y-4 text-white">
                             <div className="flex gap-x-[4.5rem]">
                                 <label>Report #:</label>
-                                <input {...register('number', { required: true })} type="number" className="border-2 border-slate-400" />
+                                <input {...register('number', { required: true })} type="number" className="border-2 border-slate-400 text-black" />
                                 {errors.number && <span className="text-red-500">Report number is required</span>}
                             </div>
                             <div className="flex gap-x-[3.1rem]">
                                 <label>Type of Bug:</label>
-                                <input {...register('type', { required: true })} type="text" className="border-2 border-slate-400" />
+                                <input {...register('type', { required: true })} type="text" className="border-2 border-slate-400 text-black" />
                                 {errors.type && <span className="text-red-500">Type of bug is required</span>}
                             </div>
                             <div className="flex gap-x-4">
                                 <label>Summary of Bug:</label>
-                                <textarea {...register('summary', { required: true })} rows={8} cols={30} className="border-2 border-slate-400"></textarea>
+                                <textarea {...register('summary', { required: true })} rows={8} cols={30} className="border-2 border-slate-400 text-black"></textarea>
                                 {errors.summary && <span className="text-red-500">Summary is required</span>}
                             </div>
                             <div className="flex gap-x-8">
@@ -57,9 +62,7 @@ const BugForm = () => {
                         </div>
                     </form>
                 </div>
-                <div className="p-2">
-                    <Navbar/>
-                </div>
+           
             </div>
         </div>
     );

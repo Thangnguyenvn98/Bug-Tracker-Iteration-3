@@ -1,16 +1,18 @@
 import mongoose from "mongoose"
 
-export interface ReportType {
+
+export type ReportType = {
     number: number;
     type: string;
     summary: string;
-    createdBy: mongoose.Types.ObjectId;
-    progressUpdates: mongoose.Types.ObjectId[];
-    createdAt: Date;
-    closedAt?: Date;
-    isClosed: boolean;
-    reasonForClosing?: string;
-    bugFixDetails?: string;
+    createdBy: string;
+    progressUpdates: string[];
+    createdAt: Date
+    closedAt: Date
+    isClosed: boolean
+    reasonForClosing: string;
+    bugFixDetails: string;
+    isFixed:boolean
 }
 
 const reportSchema = new mongoose.Schema({
@@ -24,6 +26,7 @@ const reportSchema = new mongoose.Schema({
     isClosed: { type: Boolean, default: false },
     reasonForClosing: { type: String },
     bugFixDetails: { type: String },
+    isFixed:{type:Boolean, default:false}
 });
 
 const Report = mongoose.model<ReportType>('Report', reportSchema);
