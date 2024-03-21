@@ -1,10 +1,9 @@
 import {useForm, SubmitHandler} from "react-hook-form"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import useAuthStore from "../hooks/store";
-import {useState, useEffect} from 'react'
 
 import toast from "react-hot-toast";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 
 interface ResetPasswordProps {
     password: string;
@@ -16,30 +15,8 @@ const ResetPassword = () => {
     const navigate = useNavigate()
     const token = searchParams.get('token') || '';
     const userId = searchParams.get('id') || '';
-    const [userName, setUserName] = useState('');
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
-    useEffect(() => {
-        // Function to fetch user details securely
-        const fetchUserDetails = async () => {
-            try {
-                // Assume you have an endpoint to fetch user details that validates the token and userId
-                const response = await axios.get(`${API_BASE_URL}/api/user/${userId}/token/${token}`, 
-                   
-                );
 
-                if (response.status === 200 && response.data) {
-                    setUserName(response.data);
-                }
-            } catch (error) {
-                console.error('Error fetching user details:', error);
-            }
-        };
-
-        if (token && userId) {
-            fetchUserDetails();
-        }
-    }, [token, userId]);
     const { resetPassword: storeRequest } = useAuthStore();
   
     const {register, watch,handleSubmit, formState: { errors }} = useForm<ResetPasswordProps>()
@@ -63,7 +40,6 @@ const ResetPassword = () => {
       <div className="p-10 flex justify-center">
           <div className="p-4 bg-white w-[400px] rounded-lg border-2 border-black">
               <h2 className="text-center text-2xl font-bold">Reset account password</h2>
-              { userName.length > 1 && <p className="text-center text-md mt-4">Enter a new password for {userName} </p>}
              <form onSubmit={handleSubmit(onSubmit)} className="p-4">
               <div className="flex flex-col gap-y-6">
               <input className="p-4 border-2" {...register("password",{required: "This field is required",
