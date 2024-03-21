@@ -154,7 +154,11 @@ app.post("/api/requestPasswordReset", async (req:Request,res:Response) => {
         let resetToken = crypto.randomBytes(32).toString("hex")
         const hash = await bcrypt.hash(resetToken, 8)
         token = await new Token({userId: user.id, token:hash,createdAt:Date.now()}).save()
-        const link = `http://localhost:5173/reset-password?token=${resetToken}&id=${user.id}`
+        const baseUrl = process.env.NODE_ENV === 'production'
+                        ? 'https://bug-tracker-app-iteration-3.onrender.com'  // Replace with your actual production domain
+                        : 'http://localhost:5173';
+
+        const link = `${baseUrl}/reset-password?token=${resetToken}&id=${user.id}`;
         sendEmail(user.email,"Password Reset Request",{name: user.username,link: link,},"./template/requestResetPassword.handlebars");
         return res.json(link);
     }catch (e) {
