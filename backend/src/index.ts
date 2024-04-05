@@ -19,8 +19,6 @@ import http from 'http'
 import Room from "./models/room.model";
 import Message from "./models/message.model";
 
-import multer from "multer"
-import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
 
 
 
@@ -31,18 +29,7 @@ mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string)
 const PORT = process.env.PORT || 5050;
 const app = express()
 const server = http.createServer(app)
-const cloudinary = require('cloudinary').v2;
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/') // Temporary storage folder
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)) // Append the date to the original filename to avoid naming conflicts
-    }
-});
-const fs = require('fs');
 
-const upload = multer({ storage: storage });
 
 
 app.use(express.json())
@@ -61,22 +48,7 @@ const io = new Server(server, {
     }
 })
 
-cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.API_KEY,
-    api_secret: process.env.API_SECRET,
-  });
 
-
-function formatDateFromTimestamp(timestamp:Date) {
-    const date = new Date(timestamp);
-    let timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    
-    // Remove AM/PM from the time string
-    timeString = timeString.replace(/AM|PM/, '').trim();
-
-    return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${timeString}`;
-}
 
 io.on('connection', async (socket) => {
     console.log(`A user connected ${socket.id}`);

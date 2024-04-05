@@ -1,6 +1,6 @@
 import {  useEffect, useState} from 'react';
 import { useSocket } from './providers/socket-provider';
-import {  useParams } from 'react-router-dom';
+import {  useNavigate, useParams } from 'react-router-dom';
 
 import ChatDetails from './ChatDetails';
 import ChatMessages from './ChatMessages';
@@ -33,11 +33,13 @@ const ChatPage = () => {
   const currentRoom = useRoomsQuery.data?.find(room => room._id === roomId);
   const userId = useUserQuery.data?._id;
   const username = useUserQuery.data?.username;
- 
+  const navigate = useNavigate()
 
   useEffect(()=> {
    
-
+    if (!userId) {
+      navigate('/sign-in')
+    }
   
  
     if (roomId && socket && useUserQuery.data?._id && useUserQuery.data?.username) {
