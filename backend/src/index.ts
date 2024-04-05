@@ -10,10 +10,17 @@ import crypto from "crypto"
 import sendEmail from "./utils/email/sendEmail";
 import cookieParser from "cookie-parser"
 import verifyToken from "./middleware/auth";
-import { createUserSchema, loginUserSchema } from "./schemas/user.schema";
+import {  loginUserSchema } from "./schemas/user.schema";
 import { ZodError } from 'zod';
 import Report from "./models/report.model";
 import path from "path"
+import { Server } from "socket.io"
+import http from 'http'
+import Room from "./models/room.model";
+import Message from "./models/message.model";
+
+import multer from "multer"
+import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
 
 
 
@@ -23,6 +30,20 @@ import path from "path"
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string)
 const PORT = process.env.PORT || 5050;
 const app = express()
+const server = http.createServer(app)
+const cloudinary = require('cloudinary').v2;
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/') // Temporary storage folder
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)) // Append the date to the original filename to avoid naming conflicts
+    }
+});
+const fs = require('fs');
+
+const upload = multer({ storage: storage });
+
 
 app.use(express.json())
 app.use(cookieParser());
@@ -32,12 +53,244 @@ app.use(cors({
     origin: process.env.FRONTEND_URL,
     credentials:true
 }))
+console.log(process.env.FRONTEND_URL)
+const io = new Server(server, {
+    cors: {
+        origin: process.env.FRONTEND_URL,
+        methods: ['GET', 'POST'],
+    }
+})
+
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET,
+  });
+
+
+function formatDateFromTimestamp(timestamp:Date) {
+    const date = new Date(timestamp);
+    let timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    
+    // Remove AM/PM from the time string
+    timeString = timeString.replace(/AM|PM/, '').trim();
+
+    return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${timeString}`;
+}
+
+io.on('connection', async (socket) => {
+    console.log(`A user connected ${socket.id}`);
+
+    socket.on('join_room', async (data) => {
+        const { username, userId, roomId } = data;
+        // console.log("------------------------------------------------");
+        // console.log(socket.rooms);
+        // console.log("join_room");
+        // console.log(roomId);
+
+        if (!socket.rooms.has(roomId)) {
+            socket.join(roomId);
+            // console.log(`Socket ${socket.id} joined room ${roomId}`);
+            // console.log(socket.rooms);
+            // console.log("------------------------------------------------");
+
+            const room = await Room.findById(roomId);
+            if (room && !room.members.includes(userId)) {
+                await Room.updateOne(
+                    { _id: roomId },
+                    { $addToSet: { members: userId } }
+                );
+
+
+                socket.to(roomId).emit('receive_message', {
+                    message: `${username} has joined the chat room`,
+                    username: 'CHATBOT',
+                    createdAt: new Date().toISOString(),
+                });
+
+                if (room.owner?.toString() !== userId) {
+
+                socket.emit('receive_message', {
+                    message: `Welcome ${username}`,
+                    username: 'CHATBOT',
+                    createdAt: new Date().toISOString(),
+                });
+                }
+            }
+
+         
+            } else {
+            // console.log(`Socket ${socket.id} is already in room ${roomId}`);
+            // console.log(socket.rooms);
+            // console.log("------------------------------------------------");
+            }
+    });
+
+    socket.on('send_message', async (messageData) => {
+       
+
+        const message = new Message({
+            username: messageData.username,
+            avatar: messageData.avatar, // Assuming avatar is optional and provided in messageData
+            room: messageData.room, // Make sure this is a string representing the room ID
+            message: messageData.message, // The actual message text
+            imageUrl: messageData.imageUrl
+        });
+
+        const savedMessage = await message.save();
+        const roomId = savedMessage.room.toString();
+        io.to(roomId).emit('receive_message', savedMessage);
+
+    });
+
+    socket.on("disconnecting", () => {
+
+    });
+
+    socket.on('leave_room', (data) => {
+       
+        socket.leave(data.room);
+        // Handle any additional logic needed when a user leaves a room
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`Socket ${socket.id} disconnected`);
+    });
+});
 
 app.use(express.static(path.join(__dirname, "../../frontend/dist")))
 
 
 app.get("/api/test", async (req: Request, res:Response) => {
     res.json({message: "Hello Wordld !"})
+  
+
+})
+
+
+
+app.get('/api/messages/:roomId', async (req, res) => {
+    const { roomId } = req.params;
+    const cursor = parseInt(req.query.cursor as string, 10) || 0; // Default to page 1 if not specified
+    const limit = 10; // Number of items per page
+    if (!roomId) {
+        return res.status(400).json({ message: "Room ID is required!" });
+    }
+    try {
+        const messages = await Message.find({ room: roomId })
+            .sort({ createdAt: -1 })
+            .skip(cursor)
+            .limit(limit + 1);
+
+            const hasNextPage = messages.length > limit;
+            const nextCursor = hasNextPage ? cursor + limit : undefined;
+            
+            res.json({
+                messages: messages.slice(0, limit),
+                nextCursor,
+            
+              });
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).send('Error fetching messages');
+    }
+});
+
+
+app.get('/api/room/:roomId', verifyToken, async (req: Request, res: Response) => {
+    const { roomId } = req.params;
+    try {
+      const room = await Room.findById(roomId).populate('members', 'username')
+                                              .populate('owner', 'username');  // Add this line
+      
+      if (!room) {
+        return res.status(404).json({ message: 'Room not found' });
+      }
+     
+      res.status(200).json(room);
+    } catch (error) {
+      console.error('Failed to fetch room:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/room/:roomId', verifyToken, async (req: Request, res: Response) => {
+    const { roomId } = req.params;
+
+    const {name} = req.body
+
+    try {
+    const room = await Room.findById(roomId);
+      if (!room) {
+        return res.status(404).json({ message: 'Room not found' });
+      }
+      const updatedRoom = await Room.findByIdAndUpdate(roomId,{ name }, { new: true })
+      
+      res.status(200).json(updatedRoom);
+    } catch (error) {
+      console.error('Failed to fetch room:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/room/:roomId', verifyToken, async (req: Request, res: Response) => {
+    const { roomId } = req.params;
+    
+    try {
+      const room = await Room.findById(roomId)
+      
+      if (!room) {
+        return res.status(404).json({ message: 'Room not found' });
+      }
+      await Message.deleteMany({ room: roomId });
+
+      // Then delete the room itself
+      await room.deleteOne();
+      
+      res.status(200).json({ message: 'Room deleted' });
+    } catch (error) {
+      console.error('Failed to fetch room:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+app.post('/api/room', verifyToken, async (req:Request,res:Response)=>{
+    const user = await User.findById(req.userId);
+    if (!user) {
+        return res.status(400).json({message:"User does not exists!"})
+    }
+    const existingRoom = await Room.findOne({name:req.body.name,owner:user.id})
+    if (existingRoom){
+        return res.status(400).json({message:"Room name already exists!"})
+    }
+    const room = new Room({name:req.body.name,owner:user.id});
+    await room.save()
+    return res.status(200).json(room);
+
+
+})
+
+app.get('/api/room', verifyToken, async (req:Request,res:Response)=>{
+    const user = await User.findById(req.userId);
+    if (!user) {
+        return res.status(400).json({message:"User does not exists!"})
+    }
+    
+    try {
+        const rooms = await Room.find().populate('owner', 'username');
+
+        // Sort rooms to have user-owned rooms first
+        const sortedRooms = rooms.sort((a, b) => {
+            const isAOwner = a.owner?._id.toString() === user._id.toString() ? -1 : 1;
+            const isBOwner = b.owner?._id.toString() === user._id.toString() ? -1 : 1;
+            return isAOwner - isBOwner;
+        });
+
+        res.status(200).json(sortedRooms);
+    }catch(error){
+        console.error("Failed to fetch rooms:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 
 })
 app.get("/api/users/:userId/tokens/:tokenId", async (req:Request, res:Response) => {
@@ -93,7 +346,7 @@ app.post("/api/login", async (req:Request, res:Response) => {
 
 app.post("/api/register", async(req:Request,res:Response) => {
     try {
-        const { body } = createUserSchema.parse(req);
+        const { body } = req.body;
         const { username, password, email } = body;
 
         let user=await User.findOne({username})
@@ -388,6 +641,6 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/dist', 'index.html'));
   });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
 })

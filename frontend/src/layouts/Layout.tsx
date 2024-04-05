@@ -11,7 +11,10 @@ const Layout = ({children} : LayoutProps) => {
     <div className="flex flex-col min-h-screen">
         <Toaster/>
         <Header/>
+       
         {children}
+      
+       
     </div>
   )
 }

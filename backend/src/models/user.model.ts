@@ -6,12 +6,27 @@ export type UserType = {
     email:string;
     username:string;
     password:string;
+    ownedRooms: string[];
+    joinedRooms: string[];
 }
 
 const userSchema = new mongoose.Schema({
     username: { type:String , required: true, unique:true},
     email: {type:String, required:true, unique: true},
-    password: {type:String, required:true}
+    password: {type:String, required:true},
+    ownedRooms: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Room'
+    }],
+    role: {
+        type: String,
+        enum: ["user","organizer"],
+        default: 'user'
+      },
+    joinedRooms: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Room'
+    }]
 })
 
 userSchema.pre("save", async function (next) {

@@ -33,11 +33,10 @@ const ChangePassword = () => {
         }
         };
         fetchData();
-      }, [verifyToken, isLoggedIn, navigate]);
+      }, [verifyToken, isLoggedIn, navigate,getUser]);
 
     const onSubmit: SubmitHandler<ChangePasswordProps> = async (data) => {
       try {
-          console.log(data.password)
          const response = await passwordChange(data)
          navigate('/')
          response ? toast.success("Change password successfully") : toast.error("Fail to change password")

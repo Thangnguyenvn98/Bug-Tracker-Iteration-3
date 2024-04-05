@@ -15,7 +15,7 @@ import ResetPassword from './components/ResetPassword';
 import BugForm from './components/BugForm';
 import ChangePassword from './components/ChangePassword';
 import BugLibrary from './components/BugLibrary';
-
+import ChatPage from './components/Chat';
 
 
 function App() {
@@ -96,6 +96,24 @@ function App() {
               </Layout>
             }
           />
+            <Route
+            path="/messages"
+            element={
+              
+                  <ChatPage/>
+              
+           
+            }
+          />
+           <Route
+            path="/messages/c/:ownerId/t/:roomId"
+            element={
+              
+                  <ChatPage/>
+              
+           
+            }
+          />
   
       
           <Route path="*" element={<Navigate to="/" />} />
@@ -103,5 +121,7 @@ function App() {
       </Router>
     );
 }
+
+
 
 export default App
