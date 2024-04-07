@@ -55,11 +55,16 @@ const BugForm = () => {
               </div>
               <div className="flex gap-x-[3.1rem]">
                 <label>Type of Bug:</label>
-                <input
+                <select
                   {...register("type", { required: true })}
-                  type="text"
                   className="border-2 border-slate-400 text-black"
-                />
+                >
+                  <option value="">Select Type</option>
+                  <option value="ui">UI</option>
+                  <option value="functionality">Functionality</option>
+                  <option value="performance">Performance</option>
+                  <option value="compatibility">Compatibility</option>
+                </select>
                 {errors.type && (
                   <span className="text-red-500">Type of bug is required</span>
                 )}
