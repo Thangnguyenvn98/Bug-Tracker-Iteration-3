@@ -59,7 +59,7 @@ const BugDetail = () => {
     try {
       await modifiedBug(id || "", data);
 
-      navigate("/"); // Redirect to home or another page as needed
+      navigate("/buglibrary"); // Redirect to home or another page as needed
       toast.success("Bug modified successfully");
     } catch (e) {
       const errorMessage =
