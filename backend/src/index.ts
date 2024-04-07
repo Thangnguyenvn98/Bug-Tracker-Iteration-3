@@ -49,7 +49,6 @@ const io = new Server(server, {
 })
 
 
-
 io.on('connection', async (socket) => {
     console.log(`A user connected ${socket.id}`);
 
@@ -90,7 +89,7 @@ io.on('connection', async (socket) => {
                 }
             }
 
-         
+
             } else {
             // console.log(`Socket ${socket.id} is already in room ${roomId}`);
             // console.log(socket.rooms);
@@ -99,7 +98,7 @@ io.on('connection', async (socket) => {
     });
 
     socket.on('send_message', async (messageData) => {
-       
+
 
         const message = new Message({
             username: messageData.username,
@@ -120,7 +119,7 @@ io.on('connection', async (socket) => {
     });
 
     socket.on('leave_room', (data) => {
-       
+
         socket.leave(data.room);
         // Handle any additional logic needed when a user leaves a room
     });
@@ -135,11 +134,9 @@ app.use(express.static(path.join(__dirname, "../../frontend/dist")))
 
 app.get("/api/test", async (req: Request, res:Response) => {
     res.json({message: "Hello Wordld !"})
-  
+
 
 })
-
-
 
 app.get('/api/messages/:roomId', async (req, res) => {
     const { roomId } = req.params;
@@ -156,11 +153,11 @@ app.get('/api/messages/:roomId', async (req, res) => {
 
             const hasNextPage = messages.length > limit;
             const nextCursor = hasNextPage ? cursor + limit : undefined;
-            
+
             res.json({
                 messages: messages.slice(0, limit),
                 nextCursor,
-            
+
               });
     } catch (error) {
         console.error('Error fetching messages:', error);
@@ -174,11 +171,11 @@ app.get('/api/room/:roomId', verifyToken, async (req: Request, res: Response) =>
     try {
       const room = await Room.findById(roomId).populate('members', 'username')
                                               .populate('owner', 'username');  // Add this line
-      
+
       if (!room) {
         return res.status(404).json({ message: 'Room not found' });
       }
-     
+
       res.status(200).json(room);
     } catch (error) {
       console.error('Failed to fetch room:', error);
@@ -197,7 +194,7 @@ app.get('/api/room/:roomId', verifyToken, async (req: Request, res: Response) =>
         return res.status(404).json({ message: 'Room not found' });
       }
       const updatedRoom = await Room.findByIdAndUpdate(roomId,{ name }, { new: true })
-      
+
       res.status(200).json(updatedRoom);
     } catch (error) {
       console.error('Failed to fetch room:', error);
@@ -207,10 +204,10 @@ app.get('/api/room/:roomId', verifyToken, async (req: Request, res: Response) =>
 
   app.delete('/api/room/:roomId', verifyToken, async (req: Request, res: Response) => {
     const { roomId } = req.params;
-    
+
     try {
       const room = await Room.findById(roomId)
-      
+
       if (!room) {
         return res.status(404).json({ message: 'Room not found' });
       }
@@ -218,7 +215,7 @@ app.get('/api/room/:roomId', verifyToken, async (req: Request, res: Response) =>
 
       // Then delete the room itself
       await room.deleteOne();
-      
+
       res.status(200).json({ message: 'Room deleted' });
     } catch (error) {
       console.error('Failed to fetch room:', error);
@@ -247,7 +244,7 @@ app.get('/api/room', verifyToken, async (req:Request,res:Response)=>{
     if (!user) {
         return res.status(400).json({message:"User does not exists!"})
     }
-    
+
     try {
         const rooms = await Room.find().populate('owner', 'username');
 
@@ -318,8 +315,7 @@ app.post("/api/login", async (req:Request, res:Response) => {
 
 app.post("/api/register", async(req:Request,res:Response) => {
     try {
-        const { body } = req.body;
-        const { username, password, email } = body;
+        const { email, username, password } = req.body;
 
         let user=await User.findOne({username})
         if (user) {
@@ -352,7 +348,7 @@ app.post('/api/changePassword',verifyToken, async (req:Request,res:Response) => 
         return res.status(400).json({message:"User does not exists!"})
     }
     const {password,newPassword,newPasswordConfirmation} = req.body
-    
+
     const isMatch = await bcrypt.compare(password,user.password)
     if(!isMatch){
         return res.status(400).json({message: "Old password not match"})
@@ -414,7 +410,7 @@ app.post('/api/resetPassword', async (req:Request,res:Response) => {
         const user = await User.findById({_id:req.body.userId})
         sendEmail(user?.email,"Password Reset Successfully", {name: user?.username},"./template/resetPassword.handlebars")
         await passwordResetToken.deleteOne()
-        
+
         return res.json(true);
     }catch (e) {
 
@@ -441,7 +437,7 @@ app.get('/api/user',verifyToken, async (req:Request,res:Response) => {
 app.get('/api/user/:id',async (req:Request,res:Response) => {
     try {
         const {id} = req.params
-        
+
         const user = await User.findById(id).select('username email');
         if (!user) {
             return res.status(400).json({ message: "User not exists!" });
@@ -468,9 +464,9 @@ app.get('/api/reports', verifyToken, async (req:Request, res:Response) => {
     }
 
     const reports = await Report.find()
-                                .select('number type summary isClosed -_id') 
+                                .select('number type summary isClosed -_id')
                                 .sort({ createdAt: -1 });;
-    
+
 
     res.status(200).json(reports);
 });
@@ -484,7 +480,7 @@ app.get('/api/user/:id/reports', async (req:Request, res:Response) => {
 
     // Find reports where the createdBy field matches the user's ID
     const reports = await Report.find({ createdBy: id })
-                                .select('number type summary isClosed -_id') 
+                                .select('number type summary isClosed -_id')
                                 .sort({ createdAt: -1 });
 
     res.status(200).json(reports);
@@ -527,11 +523,11 @@ app.get('/api/bug/:id',verifyToken,async(req:Request,res:Response) => {
     const { id } = req.params;
     const bugReport = await Report.findOne({number:id})
     const userId = req.userId;
-   
+
     if (!bugReport){
         return res.status(400).json({message:"Bug report number does not exists!"})
     }
-  
+
     res.status(200).json(bugReport);
 })
 
@@ -539,13 +535,13 @@ app.patch('/api/bug/:id',verifyToken,async(req:Request,res:Response) => {
     const { id } = req.params;
     const { type, summary, isClosed, reasonForClosing, isFixed, bugFixDetails } = req.body;
     const userId = req.userId;
-    
+
     const bugReport = await Report.findOne({number:id})
     const previousType = bugReport?.type
     const previousSummary = bugReport?.summary
     if (!bugReport){
         return res.status(400).json({message:"Bug report number does not exists!"})
-    } 
+    }
     bugReport.type = type || bugReport.type;
     bugReport.summary = summary || bugReport.summary;
 
@@ -578,7 +574,7 @@ app.patch('/api/bug/:id',verifyToken,async(req:Request,res:Response) => {
         bugReport.progressUpdates.push(userId);
     }
     await bugReport.save();
-    
+
 
     let template:string;
     if (isClosed && isFixed) {
