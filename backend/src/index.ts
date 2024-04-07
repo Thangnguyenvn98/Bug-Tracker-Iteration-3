@@ -318,8 +318,8 @@ app.post("/api/login", async (req:Request, res:Response) => {
 
 app.post("/api/register", async(req:Request,res:Response) => {
     try {
-        const { body } = req.body;
-        const { username, password, email } = body;
+    
+        const { username, password, email } = req.body;
 
         let user=await User.findOne({username})
         if (user) {

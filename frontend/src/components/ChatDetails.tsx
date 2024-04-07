@@ -1,10 +1,20 @@
 import { useRoom } from "@/services/queries"
 import { Loader2, ServerCrash, ShieldCheck, UserRound } from "lucide-react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const ChatDetails = ({showParticipants, roomId} :{showParticipants:boolean,roomId:string | undefined}) => {
   
   const { data: room, status } = useRoom(roomId);
+  const navigate = useNavigate();
 
+
+  useEffect(() => {
+    // If there's an error fetching the room (e.g., room is deleted), navigate to /messages
+    if (status === 'error' && !room) {
+      navigate('/messages');
+    }
+  }, [status, room, navigate]);
   if (!roomId) {
     return (
         <div className="text-center text-zinc-500">
@@ -22,7 +32,9 @@ const ChatDetails = ({showParticipants, roomId} :{showParticipants:boolean,roomI
     );
   }
 
-  if (status === 'error' || !room) {
+ 
+
+  if (status === 'error') {
     return (
       <div className="flex flex-col flex-1 justify-center items-center">
         <ServerCrash className="h-7 w-7 text-zinc-500 my-4" />

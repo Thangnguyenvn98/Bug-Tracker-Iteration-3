@@ -37,8 +37,13 @@ const ChatPage = () => {
 
   useEffect(()=> {
    
-    if (!userId) {
-      navigate('/sign-in')
+    if (useUserQuery.status !== 'pending' && !userId) {
+      navigate('/sign-in');
+    }
+
+    if (useRoomsQuery.status !== 'pending' && !currentRoom) {
+      // Redirect to /messages if the current room does not exist
+      navigate('/messages');
     }
   
  
@@ -49,7 +54,7 @@ const ChatPage = () => {
       // Optionally, fetch and set room details if not already done
     }
 
-  }, [isConnected, socket, roomId, userId, username])
+  }, [isConnected, socket, roomId, userId, username, useUserQuery.status])
 
 
 
