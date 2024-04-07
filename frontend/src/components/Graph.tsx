@@ -1,11 +1,15 @@
 import Navbar from "./Navbar";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import useAuthStore from "../hooks/store";
-import { AxiosError } from "axios";
+// import { useForm, SubmitHandler } from "react-hook-form";
+// import { useNavigate } from "react-router-dom";
+// import toast from "react-hot-toast";
+// import useAuthStore from "../hooks/store";
+// import { AxiosError } from "axios";
+import { useState } from "react";
+import { BugReport } from "../types/bugReport";
 
 const Graph = () => {
+  const [reports, setReports] = useState<BugReport[]>([]);
+  const [reportNumber, setReportNumber] = useState("");
   return (
     <div className="p-4">
       <Navbar />

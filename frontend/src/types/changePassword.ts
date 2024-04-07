@@ -1,5 +1,5 @@
 export interface ChangePasswordProps {
-    password: string;
-    newPassword:string
-    newPasswordConfirmation:string;
+  password: string;
+  newPassword: string;
+  newPasswordConfirmation: string;
 }

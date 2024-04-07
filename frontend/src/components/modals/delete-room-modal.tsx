@@ -1,9 +1,4 @@
-
-
-
-
 import { useState } from "react";
-
 
 import {
   Dialog,
@@ -19,9 +14,9 @@ import { useDeleteRoom } from "@/services/useMutation";
 
 export const DeleteChannelModal = () => {
   const { isOpen, onClose, type, data } = useModal();
-  const deleteRoomMutation = useDeleteRoom()
+  const deleteRoomMutation = useDeleteRoom();
 
-  const isModalOpen = isOpen && type === "deleteRoom"; 
+  const isModalOpen = isOpen && type === "deleteRoom";
   const { room } = data;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -29,17 +24,14 @@ export const DeleteChannelModal = () => {
   const onClick = async () => {
     try {
       setIsLoading(true);
-      deleteRoomMutation.mutate(room?._id)
-
-      
+      deleteRoomMutation.mutate(room?._id);
 
       onClose();
-      setIsLoading(false)
-     
+      setIsLoading(false);
     } catch (error) {
       console.log(error);
-    } 
-  }
+    }
+  };
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
@@ -50,28 +42,23 @@ export const DeleteChannelModal = () => {
           </DialogTitle>
           <DialogDescription className="text-center text-zinc-500">
             Are you sure you want to do this? <br />
-            <span className="text-indigo-500 font-semibold">{room?.name}</span> will be permanently deleted.
+            <span className="text-indigo-500 font-semibold">
+              {room?.name}
+            </span>{" "}
+            will be permanently deleted.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="bg-gray-100 px-6 py-4">
           <div className="flex items-center justify-between w-full">
-            <Button
-              disabled={isLoading}
-              onClick={onClose}
-              variant="ghost"
-            >
+            <Button disabled={isLoading} onClick={onClose} variant="ghost">
               Cancel
             </Button>
-            <Button
-              disabled={isLoading}
-            
-              onClick={onClick}
-            >
+            <Button disabled={isLoading} onClick={onClick}>
               Confirm
             </Button>
           </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
