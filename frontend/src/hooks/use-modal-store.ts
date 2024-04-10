@@ -3,8 +3,8 @@ import { Room } from "@/types/room";
 export type ModalType = "deleteRoom" | "editRoom" | "previewImage"; // Added "deleteRoom" as an example
 
 interface ModalData {
-  room?: Room
-  imageUrl?:string
+  room?: Room;
+  imageUrl?: string;
   // You can add other properties here as needed
 }
 

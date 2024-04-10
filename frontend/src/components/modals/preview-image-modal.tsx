@@ -2,11 +2,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useModal } from "@/hooks/use-modal-store";
 import { Button } from "../ui/button";
 
-
-
-
 export const ImagePreviewModal = () => {
-    const { isOpen, onClose, type, data } = useModal();
+  const { isOpen, onClose, type, data } = useModal();
 
   const isModalOpen = isOpen && type === "previewImage";
   const { imageUrl } = data;
@@ -17,12 +14,20 @@ export const ImagePreviewModal = () => {
         <div className="bg-white p-4 relative rounded-lg min-w-full max-h-full overflow-auto">
           {imageUrl && (
             <div>
-                  <img src={imageUrl} alt="Full Size" className="object-contain w-full h-full" />
-            <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-            Full Size
-            </a>
+              <img
+                src={imageUrl}
+                alt="Full Size"
+                className="object-contain w-full h-full"
+              />
+              <a
+                href={imageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                Full Size
+              </a>
             </div>
-          
           )}
           <DialogTitle className="text-2xl font-bold my-2">
             Image Preview
@@ -33,6 +38,5 @@ export const ImagePreviewModal = () => {
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
-
+  );
+};

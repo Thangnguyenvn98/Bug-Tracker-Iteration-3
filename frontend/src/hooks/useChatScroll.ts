@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
-
 type ChatScrollProps = {
   chatRef: React.RefObject<HTMLDivElement>;
   bottomRef: React.RefObject<HTMLDivElement>;
@@ -41,9 +40,10 @@ export const useChatScroll = ({
         return false;
       }
 
-      const distanceFromBottom = topDiv.scrollHeight - topDiv.scrollTop - topDiv.clientHeight;
+      const distanceFromBottom =
+        topDiv.scrollHeight - topDiv.scrollTop - topDiv.clientHeight;
       return distanceFromBottom <= 100;
-    }
+    };
 
     if (shouldAutoScroll()) {
       setTimeout(() => {
@@ -54,5 +54,5 @@ export const useChatScroll = ({
     }
   }, [bottomRef, chatRef, count, hasInitialized]);
 
-  return ref
-}
+  return ref;
+};

@@ -1,66 +1,52 @@
-import {  useEffect, useState} from 'react';
-import { useSocket } from './providers/socket-provider';
-import {  useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useSocket } from "./providers/socket-provider";
+import { useNavigate, useParams } from "react-router-dom";
 
-import ChatDetails from './ChatDetails';
-import ChatMessages from './ChatMessages';
-import ChatInput from './ChatInput';
-import ChatHeader from './ChatHeader';
-import ChatList from './ChatList';
+import ChatDetails from "./ChatDetails";
+import ChatMessages from "./ChatMessages";
+import ChatInput from "./ChatInput";
+import ChatHeader from "./ChatHeader";
+import ChatList from "./ChatList";
 
-import { useCurrentUser, useRooms } from '@/services/queries';
-import { Loader2, ServerCrash } from 'lucide-react';
-import { DeleteChannelModal } from './modals/delete-room-modal';
-import { EditChannelModal } from './modals/edit-room-modal';
-import {ImagePreviewModal} from './modals/preview-image-modal';
-
-
-
-
-
-
-
+import { useCurrentUser, useRooms } from "@/services/queries";
+import { Loader2, ServerCrash } from "lucide-react";
+import { DeleteChannelModal } from "./modals/delete-room-modal";
+import { EditChannelModal } from "./modals/edit-room-modal";
+import { ImagePreviewModal } from "./modals/preview-image-modal";
 
 const ChatPage = () => {
-  const {isConnected,socket} = useSocket()
-  const {roomId} = useParams()
+  const { isConnected, socket } = useSocket();
+  const { roomId } = useParams();
   const [showParticipants, setShowParticipants] = useState(false);
-  
-  const [message,setMessage] = useState('')
 
-  const useRoomsQuery = useRooms()
-  const useUserQuery = useCurrentUser()
-  const currentRoom = useRoomsQuery.data?.find(room => room._id === roomId);
+  const [message, setMessage] = useState("");
+
+  const useRoomsQuery = useRooms();
+  const useUserQuery = useCurrentUser();
+  const currentRoom = useRoomsQuery.data?.find((room) => room._id === roomId);
   const userId = useUserQuery.data?._id;
   const username = useUserQuery.data?.username;
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  useEffect(()=> {
-   
-    if (useUserQuery.status !== 'pending' && !userId) {
-      navigate('/sign-in');
+  useEffect(() => {
+    if (!userId) {
+      navigate("/sign-in");
     }
 
-    if (useRoomsQuery.status !== 'pending' && !currentRoom) {
-      // Redirect to /messages if the current room does not exist
-      navigate('/messages');
-    }
-  
- 
-    if (roomId && socket && useUserQuery.data?._id && useUserQuery.data?.username) {
-   
+    if (
+      roomId &&
+      socket &&
+      useUserQuery.data?._id &&
+      useUserQuery.data?.username
+    ) {
       // Only join the room if not already joined or if the room has changed
-      socket.emit('join_room', { userId, username, roomId });
+      socket.emit("join_room", { userId, username, roomId });
       // Optionally, fetch and set room details if not already done
     }
+  }, [isConnected, socket, roomId, userId, username]);
 
-  }, [isConnected, socket, roomId, userId, username, useUserQuery.status])
+  if (useRoomsQuery.status === "pending" || useUserQuery.status === "pending") {
 
-
-
- 
-
-  if (useRoomsQuery.status === 'pending' || useUserQuery.status === 'pending'){
     return (
       <div className="flex flex-col flex-1 justify-center items-center">
         <Loader2 className="h-7 w-7 text-zinc-500 animate-spin my-4" />
@@ -68,10 +54,10 @@ const ChatPage = () => {
           Loading messages...
         </p>
       </div>
-    )
+    );
   }
 
-  if (useRoomsQuery.status === "error" || useUserQuery.status === 'error') {
+  if (useRoomsQuery.status === "error" || useUserQuery.status === "error") {
     return (
       <div className="flex flex-col flex-1 justify-center items-center">
         <ServerCrash className="h-7 w-7 text-zinc-500 my-4" />
@@ -79,31 +65,52 @@ const ChatPage = () => {
           Something went wrong!
         </p>
       </div>
-    )
+    );
   }
 
-  
   return (
     <div className="flex min-h-screen max-w-full bg-black relative">
       {/* Left Sidebar */}
-      <ChatList userId={useUserQuery.data?._id} roomId={roomId} rooms={useRoomsQuery.data} username={useUserQuery.data?.username} socket={socket} />
+      <ChatList
+        userId={useUserQuery.data?._id}
+        roomId={roomId}
+        rooms={useRoomsQuery.data}
+        username={useUserQuery.data?.username}
+        socket={socket}
+      />
       {/* Chat Container */}
-      {userId && roomId &&
-      <div className="flex flex-1 flex-col relative">
-              <DeleteChannelModal/>
-              <EditChannelModal/>
-              <ImagePreviewModal/>
-              <ChatHeader currentRoom={currentRoom} showParticipants={showParticipants} setShowParticipants={setShowParticipants}/>
-              {/* Chat messages */}
-              <ChatMessages roomId={roomId} currentRoom={currentRoom} username={useUserQuery.data?.username} />
-              {/* Input bar */}
-              <ChatInput socket={socket} roomId={roomId} username={useUserQuery.data?.username} currentRoom={currentRoom} isConnected={isConnected} message={message} setMessage={setMessage}/>
-      </div>
-      }
+      {userId && roomId && (
+        <div className="flex flex-1 flex-col relative">
+          <DeleteChannelModal />
+          <EditChannelModal />
+          <ImagePreviewModal />
+          <ChatHeader
+            currentRoom={currentRoom}
+            showParticipants={showParticipants}
+            setShowParticipants={setShowParticipants}
+          />
+          {/* Chat messages */}
+          <ChatMessages
+            roomId={roomId}
+            currentRoom={currentRoom}
+            username={useUserQuery.data?.username}
+          />
+          {/* Input bar */}
+          <ChatInput
+            socket={socket}
+            roomId={roomId}
+            username={useUserQuery.data?.username}
+            currentRoom={currentRoom}
+            isConnected={isConnected}
+            message={message}
+            setMessage={setMessage}
+          />
+        </div>
+      )}
       {/* Right Sidebar */}
-              <ChatDetails roomId={roomId} showParticipants={showParticipants}/>
-      </div>
-  )
-}
+      <ChatDetails roomId={roomId} showParticipants={showParticipants} />
+    </div>
+  );
+};
 
-export default ChatPage
+export default ChatPage;
