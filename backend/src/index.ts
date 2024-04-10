@@ -311,6 +311,7 @@ app.post("/api/login", async (req: Request, res: Response) => {
   }
 });
 
+
 app.post("/api/register", async (req: Request, res: Response) => {
   try {
     const { email, username, password } = req.body;
